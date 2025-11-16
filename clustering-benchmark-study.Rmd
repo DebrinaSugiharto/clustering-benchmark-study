@@ -1,0 +1,502 @@
+---
+title: "clustering-benchmark-study"
+author: "debrina"
+date: "2025-06-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Package Installation
+```{r}
+# install.packages("mlbench")
+# install.packages("ggplot2")
+# install.packages("factoextra")
+# install.packages("cluster")
+# install.packages("dendextend")
+```
+
+# Library
+```{r}
+# Load package
+library(mlbench)
+library(ggplot2)
+library(factoextra)
+library(cluster)
+library(dendextend)
+```
+
+# Data Preparation
+```{r}
+set.seed(123)
+moon_data <- mlbench.smiley(500)
+df <- as.data.frame(moon_data$x)
+colnames(df) <- c("x", "y")
+                  
+# Visualisasi awal
+ggplot(df, aes(x, y)) + 
+  geom_point() + 
+  ggtitle("Data Bulan Sabit (Smiley)") + 
+  theme_minimal()
+```
+# No Scale No PCA No UMAP
+```{r}
+library(cluster)
+library(factoextra)
+
+# ============================
+# 1. K-MEANS (NO SCALE, NO PCA, NO UMAP)
+# ============================
+
+set.seed(123)
+km <- kmeans(df, centers = 4, nstart = 25)
+
+sil <- silhouette(km$cluster, dist(df))
+sil_mean <- round(mean(sil[, 3]), 3)
+
+fviz_cluster(
+  km,
+  data = df,
+  geom = "point",
+  main = paste0(
+    "K-Means Clustering (No Scale, No PCA, No UMAP)\n",
+    "Silhouette Score = ", sil_mean
+  )
+)
+
+fviz_nbclust(df, kmeans, method = "wss") +
+  ggtitle("Elbow Method (No Scale, No PCA, No UMAP)")
+
+sil_values <- numeric(10)
+d <- dist(df)
+
+for (k in 2:10) {
+  km_temp <- kmeans(df, centers = k, nstart = 25)
+  sil_temp <- silhouette(km_temp$cluster, d)
+  sil_values[k] <- mean(sil_temp[, 3])
+}
+
+plot(
+  2:10, sil_values[2:10],
+  type = "b",
+  xlab = "Number of Clusters (k)",
+  ylab = "Average Silhouette Score",
+  main = "Silhouette Scores for k = 2 to 10\n(No Scale, No PCA, No UMAP)"
+)
+```
+# Scaled
+```{r}
+library(factoextra)
+library(cluster)
+
+set.seed(123)
+
+# --- 1. SCALE ONLY (no PCA, no UMAP) ---
+df_scaled <- scale(df)
+
+# --- 2. K-Means with chosen k ---
+k <- 4
+km_scaled <- kmeans(df_scaled, centers = k, nstart = 25)
+
+# Silhouette Score
+sil <- silhouette(km_scaled$cluster, dist(df_scaled))
+sil_score <- mean(sil[, 3])
+
+# --- 3. Visualization of Clusters (Scaled Data) ---
+fviz_cluster(
+  km_scaled, data = df_scaled, geom = "point",
+  main = paste0(
+    "K-Means Clustering on Scaled Data (k = ", k,
+    ") | Silhouette = ", round(sil_score, 3)
+  )
+)
+
+# --- 4. Elbow Method (Scaled Data) ---
+wss <- vector()
+for (i in 2:10) {
+  km_temp <- kmeans(df_scaled, centers = i, nstart = 20)
+  wss[i] <- km_temp$tot.withinss
+}
+
+plot(
+  2:10, wss[2:10], type = "b",
+  xlab = "Number of Clusters (k)",
+  ylab = "Within-Cluster Sum of Squares (WSS)",
+  main = "Elbow Method (Scaled Data)"
+)
+
+# --- 5. Silhouette Loop (Scaled Data) ---
+sil_scores <- c()
+for (i in 2:10) {
+  km_temp <- kmeans(df_scaled, centers = i, nstart = 20)
+  sil_temp <- silhouette(km_temp$cluster, dist(df_scaled))
+  sil_scores[i] <- mean(sil_temp[, 3])
+}
+
+plot(
+  2:10, sil_scores[2:10], type = "b",
+  xlab = "Number of Clusters (k)",
+  ylab = "Mean Silhouette Score",
+  main = "Silhouette Scores Across k (Scaled Data)"
+)
+
+```
+
+
+# Scaled PCA
+```{r}
+library(factoextra)
+library(cluster)
+
+set.seed(123)
+
+# --- 1. PCA WITH SCALING ---
+pca_res <- prcomp(df, scale. = TRUE)
+pca_df <- as.data.frame(pca_res$x[, 1:2])  # using first 2 PCs
+
+# --- 2. K-Means with chosen k ---
+k <- 4
+km_pca <- kmeans(pca_df, centers = k, nstart = 25)
+
+# Silhouette Score
+sil <- silhouette(km_pca$cluster, dist(pca_df))
+sil_score <- mean(sil[, 3])
+
+# --- 3. Visualization (with "Scaled" in Title) ---
+fviz_cluster(
+  km_pca, data = pca_df, geom = "point",
+  main = paste0(
+    "K-Means on PCA (Scaled) | k = ", k,
+    " | Silhouette = ", round(sil_score, 3)
+  )
+)
+
+# --- 4. Elbow Method (with Scaled Title) ---
+wss <- vector()
+for (i in 2:10) {
+  km_temp <- kmeans(pca_df, centers = i, nstart = 20)
+  wss[i] <- km_temp$tot.withinss
+}
+
+plot(
+  2:10, wss[2:10], type = "b",
+  xlab = "Number of Clusters (k)",
+  ylab = "Within-Cluster Sum of Squares (WSS)",
+  main = "Elbow Method on PCA (Scaled Data)"
+)
+
+# --- 5. Silhouette Loop (with Scaled Title) ---
+sil_scores <- c()
+for (i in 2:10) {
+  km_temp <- kmeans(pca_df, centers = i, nstart = 20)
+  sil_temp <- silhouette(km_temp$cluster, dist(pca_df))
+  sil_scores[i] <- mean(sil_temp[, 3])
+}
+
+plot(
+  2:10, sil_scores[2:10], type = "b",
+  xlab = "Number of Clusters (k)",
+  ylab = "Mean Silhouette Score",
+  main = "Silhouette Scores Across k (PCA Scaled Data)"
+)
+
+```
+
+# Scaled UMAP
+```{r}
+# Load libraries
+library(mlbench)
+library(ggplot2)
+library(factoextra)
+library(cluster)
+library(umap)
+
+set.seed(123)
+
+# ----------------------------
+# 1. Generate Moon-Shaped Smiley Data
+# ----------------------------
+moon_data <- mlbench.smiley(500)   # 500 points
+df <- as.data.frame(moon_data$x)
+colnames(df) <- c("x", "y")
+
+# Visualize raw data
+ggplot(df, aes(x, y)) +
+  geom_point(size = 2) +
+  ggtitle("Original Moon-Shaped Smiley Data") +
+  theme_minimal()
+
+# ----------------------------
+# 2. Scale the Data
+# ----------------------------
+df_scaled <- scale(df)
+
+# ----------------------------
+# 3. Apply UMAP (Non-linear Manifold Learning)
+# ----------------------------
+umap_config <- umap.defaults
+umap_config$n_neighbors <- 15
+umap_config$min_dist <- 0.1
+
+umap_result <- umap(df_scaled, config = umap_config)
+umap_df <- as.data.frame(umap_result$layout)
+colnames(umap_df) <- c("UMAP1", "UMAP2")
+
+ggplot(umap_df, aes(UMAP1, UMAP2)) +
+  geom_point(size = 2) +
+  ggtitle("UMAP Representation (Scaled Data)") +
+  theme_minimal()
+
+# ----------------------------
+# 4. Determine Optimal k via Elbow Method
+# ----------------------------
+fviz_nbclust(umap_df, kmeans, method = "wss") +
+  ggtitle("Elbow Method on UMAP (Scaled Data)")
+
+# ----------------------------
+# 5. Loop Silhouette Scores for k = 2:10
+# ----------------------------
+sil_scores <- c()
+for (k in 2:10) {
+  km_temp <- kmeans(umap_df, centers = k, nstart = 25)
+  sil <- silhouette(km_temp$cluster, dist(umap_df))
+  sil_scores[k] <- mean(sil[, 3])
+}
+
+plot(2:10, sil_scores[2:10], type = "b",
+     xlab = "Number of Clusters (k)",
+     ylab = "Average Silhouette Score",
+     main = "Silhouette Scores for K-Means on UMAP (Scaled)")
+
+best_k <- 4
+cat("Best k according to Silhouette:", best_k, "\n")
+
+# ----------------------------
+# 6. Final K-Means Using Best k
+# ----------------------------
+km_final <- kmeans(umap_df, centers = best_k, nstart = 25)
+
+# Silhouette score for final clustering
+sil_final <- silhouette(km_final$cluster, dist(umap_df))
+sil_value <- mean(sil_final[, 3])
+cat("Final Silhouette Score:", sil_value, "\n")
+
+# ----------------------------
+# 7. Visualize Final Clusters on UMAP
+# ----------------------------
+fviz_cluster(km_final, data = umap_df, geom = "point",
+             main = paste0("K-Means on Scaled + UMAP | k = ", best_k,
+                           " | Silhouette = ", round(sil_value, 3))) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set2")
+
+# ----------------------------
+# 8. Optional: Combine original smiley structure with cluster color
+# ----------------------------
+df_vis <- cbind(df, cluster = as.factor(km_final$cluster))
+ggplot(df_vis, aes(x, y, color = cluster)) +
+  geom_point(size = 2) +
+  ggtitle(paste0("Smiley Data Clustered with K-Means (Scaled + UMAP) | Silhouette = ", 
+                 round(sil_value, 3))) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set2")
+
+```
+# Other Algorithm like: Agglomerative, DBSCAN, Spectral+UMAP
+```{r}
+# ----------------------------
+# Load Libraries
+# ----------------------------
+library(mlbench)
+library(ggplot2)
+library(factoextra)
+library(cluster)
+library(umap)
+library(dbscan)
+library(kernlab)
+
+set.seed(123)
+
+# ----------------------------
+# 1. Generate Moon-Shaped Smiley Data
+# ----------------------------
+moon_data <- mlbench.smiley(500)
+df <- as.data.frame(moon_data$x)
+colnames(df) <- c("x", "y")
+
+# Visualize raw data
+ggplot(df, aes(x, y)) +
+  geom_point(size = 2) +
+  ggtitle("Original Moon-Shaped Smiley Data") +
+  theme_minimal()
+
+# ----------------------------
+# 2. Scale Data
+# ----------------------------
+df_scaled <- scale(df)
+
+# ----------------------------
+# 3. Apply UMAP
+# ----------------------------
+umap_config <- umap.defaults
+umap_config$n_neighbors <- 15
+umap_config$min_dist <- 0.1
+
+umap_result <- umap(df_scaled, config = umap_config)
+umap_df <- as.data.frame(umap_result$layout)
+colnames(umap_df) <- c("UMAP1", "UMAP2")
+
+ggplot(umap_df, aes(UMAP1, UMAP2)) +
+  geom_point(size = 2) +
+  ggtitle("UMAP Representation (Scaled Data)") +
+  theme_minimal()
+
+# ----------------------------
+# 4. Function to Loop Silhouette Scores for k=2:10
+# ----------------------------
+get_best_k <- function(data, method="kmeans") {
+  sil_values <- c()
+  numeric_data <- as.matrix(data[, sapply(data, is.numeric)])  # only numeric
+  for(k in 2:10){
+    if(method == "kmeans"){
+      cl <- kmeans(numeric_data, centers=k, nstart=25)$cluster
+    } else if(method == "hc"){  # Agglomerative
+      cl <- cutree(hclust(dist(numeric_data), method="ward.D2"), k=k)
+    } else if(method == "spectral"){
+      cl <- specc(numeric_data, centers=k)
+      cl <- as.numeric(cl)
+    }
+    sil <- silhouette(cl, dist(numeric_data))
+    sil_values[k] <- mean(sil[,3])
+  }
+  best_k <- which.max(sil_values)
+  return(list(best_k=best_k, sil_values=sil_values))
+}
+
+# ----------------------------
+# 5. K-Means
+# ----------------------------
+km_res <- get_best_k(umap_df, method="kmeans")
+best_k_km <- 4#km_res$best_k
+km <- kmeans(as.matrix(umap_df[,1:2]), centers=best_k_km, nstart=25)
+sil_km <- silhouette(km$cluster, dist(as.matrix(umap_df[,1:2])))
+mean_sil_km <- mean(sil_km[,3])
+
+# Visualize on UMAP
+fviz_cluster(km, data=umap_df, geom="point",
+             main=paste0("K-Means (Scaled + UMAP) | k=", best_k_km,
+                         " | Silhouette=", round(mean_sil_km,3)))
+
+# Map back to original data
+df$km_cluster <- as.factor(km$cluster)
+ggplot(df, aes(x,y,color=km_cluster)) +
+  geom_point(size=2) +
+  ggtitle(paste0("K-Means on Original Data | Silhouette=", round(mean_sil_km,3))) +
+  theme_minimal() +
+  scale_color_brewer(palette="Set2")
+
+# ----------------------------
+# 6. Agglomerative Clustering
+# ----------------------------
+hc_res <- get_best_k(umap_df, method="hc")
+best_k_hc <- 4#hc_res$best_k
+hc <- hclust(dist(as.matrix(umap_df[,1:2])), method="ward.D2")
+cluster_hc <- cutree(hc, k=best_k_hc)
+sil_hc <- silhouette(cluster_hc, dist(as.matrix(umap_df[,1:2])))
+mean_sil_hc <- mean(sil_hc[,3])
+
+# Visualize on UMAP
+umap_df$hc_cluster <- as.factor(cluster_hc)
+ggplot(umap_df, aes(UMAP1,UMAP2,color=hc_cluster)) +
+  geom_point(size=2) +
+  ggtitle(paste0("Agglomerative (Scaled + UMAP) | k=", best_k_hc,
+                 " | Silhouette=", round(mean_sil_hc,3))) +
+  theme_minimal() +
+  scale_color_brewer(palette="Set2")
+
+# Map back to original data
+df$hc_cluster <- as.factor(cluster_hc)
+ggplot(df, aes(x,y,color=hc_cluster)) +
+  geom_point(size=2) +
+  ggtitle(paste0("Agglomerative on Original Data | Silhouette=", round(mean_sil_hc,3))) +
+  theme_minimal() +
+  scale_color_brewer(palette="Set2")
+
+# ----------------------------
+# 7. Spectral Clustering
+# ----------------------------
+spec_res <- get_best_k(umap_df, method="spectral")
+best_k_spec <- 4#spec_res$best_k
+sc <- specc(as.matrix(umap_df[,1:2]), centers=best_k_spec)
+umap_df$spec_cluster <- as.factor(sc)
+sil_spec <- silhouette(as.numeric(sc), dist(as.matrix(umap_df[,1:2])))
+mean_sil_spec <- mean(sil_spec[,3])
+
+# Visualize on UMAP
+ggplot(umap_df, aes(UMAP1,UMAP2,color=spec_cluster)) +
+  geom_point(size=2) +
+  ggtitle(paste0("Spectral Clustering (Scaled + UMAP) | k=", best_k_spec,
+                 " | Silhouette=", round(mean_sil_spec,3))) +
+  theme_minimal() +
+  scale_color_brewer(palette="Set1")
+
+# Map back to original data
+df$spec_cluster <- as.factor(sc)
+ggplot(df, aes(x,y,color=spec_cluster)) +
+  geom_point(size=2) +
+  ggtitle(paste0("Spectral on Original Data | Silhouette=", round(mean_sil_spec,3))) +
+  theme_minimal() +
+  scale_color_brewer(palette="Set1")
+
+# ----------------------------
+# 8. DBSCAN (Silhouette not reliable for noise points)
+# ----------------------------
+db <- dbscan(umap_df[,1:2], eps=0.3, minPts=5)
+umap_df$dbscan_cluster <- as.factor(db$cluster)
+
+# UMAP Visualization
+ggplot(umap_df, aes(UMAP1,UMAP2,color=dbscan_cluster)) +
+  geom_point(size=2) +
+  ggtitle("DBSCAN (Scaled + UMAP)") +
+  theme_minimal() +
+  scale_color_brewer(palette="Dark2")
+
+# Map back to original data
+df$dbscan_cluster <- as.factor(db$cluster)
+ggplot(df, aes(x,y,color=dbscan_cluster)) +
+  geom_point(size=2) +
+  ggtitle("DBSCAN Clustered on Original Data") +
+  theme_minimal() +
+  scale_color_brewer(palette="Dark2")
+
+```
+```{r}
+# Install HDBSCAN package if needed
+# install.packages("dbscan")  # HDBSCAN is included in 'dbscan' package
+
+library(dbscan)
+
+# Run HDBSCAN on UMAP-transformed data
+hdb <- hdbscan(umap_df[,1:2], minPts=10)
+
+# Add cluster labels to dataframe
+umap_df$hdb_cluster <- as.factor(hdb$cluster)
+df$hdb_cluster <- as.factor(hdb$cluster)
+
+# Visualize clusters on UMAP
+ggplot(umap_df, aes(UMAP1, UMAP2, color=hdb_cluster)) +
+  geom_point(size=2) +
+  ggtitle("HDBSCAN (Scaled + UMAP)") +
+  theme_minimal() +
+  scale_color_brewer(palette="Set3")
+
+# Visualize clusters on original data
+ggplot(df, aes(x, y, color=hdb_cluster)) +
+  geom_point(size=2) +
+  ggtitle("HDBSCAN Clustered on Original Data") +
+  theme_minimal() +
+  scale_color_brewer(palette="Set3")
+
+```
