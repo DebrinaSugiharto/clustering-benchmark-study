@@ -199,19 +199,20 @@ After evaluating K-Means extensively, I explored other clustering algorithms on 
      - Mapping to original data shows cluster assignments aligned with curved structures.
      - Silhouette Score: ~0.769
 
-<img width="500" height="308" alt="image" src="https://github.com/user-attachments/assets/6545fbbc-e283-41d5-950f-a1b9135f2cca" />
-       
-<img width="503" height="320" alt="image" src="https://github.com/user-attachments/assets/b9ab5315-ff9a-4c68-826c-69ae063e2418" />
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/6545fbbc-e283-41d5-950f-a1b9135f2cca" width="48%" />
+  <img src="https://github.com/user-attachments/assets/b9ab5315-ff9a-4c68-826c-69ae063e2418" width="48%" />
+</p>
 
   2. **Spectral Clustering**
      - Effectively handles non-linear structures after UMAP.
      - Clusters correspond neatly to moon and facial components in UMAP and original data.
      - Silhouette Score: ~0.769
 
-<img width="503" height="307" alt="image" src="https://github.com/user-attachments/assets/13883a8c-758a-4641-b1a6-18edc180a1e6" />
-
-<img width="504" height="313" alt="image" src="https://github.com/user-attachments/assets/edc31f2f-b930-4119-8763-738bffbceb0d" />
-
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/13883a8c-758a-4641-b1a6-18edc180a1e6" width="48%" />
+  <img src="https://github.com/user-attachments/assets/edc31f2f-b930-4119-8763-738bffbceb0d" width="48%" />
+</p>
        
   3. **DBSCAN (Density-Based)**
      - Detects moon shape without specifying k.
@@ -255,5 +256,7 @@ Overall, k-based clustering on a preprocessed feature space provides the most ac
   👩‍💻 **Author**
 
 Debrina Silviana Dewi Sugiharto
+
 debrinasilviana@gmail.com
+
 Data Scientist — 10+ years of experience in geophysics and banking analytics.
