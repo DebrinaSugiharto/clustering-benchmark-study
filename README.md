@@ -242,9 +242,10 @@ After evaluating K-Means extensively, I explored other clustering algorithms on 
      - Scaling is used and UMAP helps, but the underlying density distribution still causes HDBSCAN to fail in producing meaningful clusters.
      - Visual inspection is recommended to assess cluster quality, rather than relying on Silhouette Score.
     
-  <img width="491" height="322" alt="image" src="https://github.com/user-attachments/assets/1782cfe1-21d6-43cb-8bd5-ca8f74c07d1d" />
-
-  <img width="499" height="314" alt="image" src="https://github.com/user-attachments/assets/cf1792a4-e494-46bd-9fcc-cef9573a37be" />
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/1782cfe1-21d6-43cb-8bd5-ca8f74c07d1d" width="48%" />
+  <img src="https://github.com/user-attachments/assets/cf1792a4-e494-46bd-9fcc-cef9573a37be" width="48%" />
+</p>
 
 🏁 **Conclusion**
 
