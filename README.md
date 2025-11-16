@@ -1,6 +1,4 @@
-# clustering-benchmark-study
-
-📘 **Clustering Algorithm Benchmark Study**
+# 📘 **Clustering Algorithm Benchmark Study**
 
 
 
@@ -257,5 +255,5 @@ Overall, k-based clustering on a preprocessed feature space provides the most ac
   👩‍💻 **Author**
 
 Debrina Silviana Dewi Sugiharto
-
+debrinasilviana@gmail.com
 Data Scientist — 10+ years of experience in geophysics and banking analytics.
